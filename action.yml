@@ -1,0 +1,16 @@
+
+name: 'Close Milestone'
+description: 'Automatically closes milestones linked to pull requests upon closure'
+runs:
+  using: "composite"
+  steps:
+  - name: Run Close Milestone Script
+    id: run-close-milestone-script
+    run: ${{ github.action_path }}/close-milestone.sh
+    shell: bash
+    env:
+      SECRETS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPOSITORY: ${{ github.repository }}
+      PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
+      PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+      PULL_REQUEST_MILESTONE: ${{ toJSON(github.event.pull_request.milestone) }}

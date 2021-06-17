@@ -6,7 +6,6 @@ This should be triggered upon pull request closure and closes the milestone when
 ## Example Github Action Workflow File
 
 ```
-
 name: Close Milestone
 
 on:
@@ -20,5 +19,7 @@ jobs:
     steps:
     - name: Run Close Milestone Action
       id: run-close-milestone-action
-      uses: DanS01/Close-Milestone-Action@v1
+      uses: DanS01/Close-Milestone-Action@v1.0
+      with:
+        secrets-token: ${{ secrets.GITHUB_TOKEN }}
 ```

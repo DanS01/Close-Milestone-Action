@@ -30,7 +30,7 @@ then
     # If there are no open issues then the milestone is elegible for closure
     if [[ $OPEN_ISSUES == 0 ]];
     then
-        echo Milestone can be successfully closed
+        echo There are no open issues remaining on the milestone
         PROCESSED_MILESTONE_DATA=$OPEN_MILESTONE_DATA
     else
         # Only for the purpose of making the message grammatically correct when read
@@ -52,10 +52,12 @@ then
     TITLE=$( echo "$OPEN_MILESTONE" | jq --raw-output '.title' )
     CLOSED_ISSUES=$( echo "$OPEN_MILESTONE" | jq --raw-output '.closed_issues' )
     DUE_ON=$( echo "$OPEN_MILESTONE" | jq --raw-output '.due_on' )
+
     # Need to authenticate to obtain write access for the REST API PATCH event
     CLOSED_MILESTONE=$( curl --silent -X PATCH -H "Authorization: token ${SECRETS_TOKEN}" "Accept: application/vnd.github.v3+json" https://api.github.com/repos/"${REPOSITORY}"/milestones/"$NUMBER" -d '{ "state":"closed" }' )
 
-    # Display information of the CLOSED milestone
+    # Display the details of the CLOSED milestone
+    echo Milestone with the following details has been successfully closed:
     echo Title: "$TITLE"
     echo Number: "$NUMBER"
     echo Closed Issues: "$CLOSED_ISSUES"

@@ -24,6 +24,16 @@ then
 
     PULL_REQUEST_MILESTONE_DATA="${PULL_REQUEST_MILESTONE}"
     PULL_REQUEST_MILESTONE_STATE=$( echo "${PULL_REQUEST_MILESTONE}" | jq --raw-output .state )
+
+    # Check whether an OPEN milestone is linked to the pull request
+    # If there is no milestone linked to the pull request then a value of "null" is returned from the API
+    if [[ $PULL_REQUEST_MILESTONE != "null" && $PULL_REQUEST_MILESTONE_STATE == "open" ]];
+    then
+        echo An open milestone was successfully found
+        MILESTONE_DATA=$PULL_REQUEST_MILESTONE_DATA
+    else
+        echo There is no open milestone linked to the pull request
+    fi
 elif [[ $EVENT_TRIGGER_SOURCE == "Issue" ]];
 then
     echo Issue Name: "${ISSUE_TITLE}"
@@ -31,26 +41,16 @@ then
 
     ISSUE_MILESTONE_DATA="${ISSUE_MILESTONE}"
     ISSUE_MILESTONE_STATE=$( echo "${ISSUE_MILESTONE}" | jq --raw-output .state )
-fi
 
-# If EVENT_TRIGGER_SOURCE is "Pull Request", check whether an OPEN milestone is linked to the pull request
-# If there is no milestone linked to the pull request then a value of "null" is returned from the API
-if [[ $PULL_REQUEST_MILESTONE != "null" && $PULL_REQUEST_MILESTONE_STATE == "open" ]];
-then
-    echo An open milestone was successfully found
-    MILESTONE_DATA=$PULL_REQUEST_MILESTONE_DATA
-else
-    echo There is no open milestone linked to the pull request
-fi
-
-# If EVENT_TRIGGER_SOURCE is "Issue", check whether an OPEN milestone is linked to the issue
-# If there is no milestone linked to the issue then a value of "null" is returned from the API
-if [[ $ISSUE_MILESTONE != "null" && $ISSUE_MILESTONE_STATE == "open" ]];
-then
-    echo An open milestone was successfully found
-    MILESTONE_DATA=$ISSUE_MILESTONE_DATA
-else
-    echo There is no open milestone linked to the issue
+    # Check whether an OPEN milestone is linked to the issue
+    # If there is no milestone linked to the issue then a value of "null" is returned from the API
+    if [[ $ISSUE_MILESTONE != "null" && $ISSUE_MILESTONE_STATE == "open" ]];
+    then
+        echo An open milestone was successfully found
+        MILESTONE_DATA=$ISSUE_MILESTONE_DATA
+    else
+        echo There is no open milestone linked to the issue
+    fi
 fi
 
 if [[ $MILESTONE_DATA != '' ]];
@@ -81,7 +81,6 @@ fi
 
 if [[ $MILESTONE_DATA != '' ]];
 then
-    # 
     OPEN_MILESTONE=$( echo "$MILESTONE_DATA" )
     NUMBER=$( echo "$OPEN_MILESTONE" | jq --raw-output '.number' )
     TITLE=$( echo "$OPEN_MILESTONE" | jq --raw-output '.title' )

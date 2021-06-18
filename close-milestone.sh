@@ -6,24 +6,24 @@ PROCESSED_MILESTONE_DATA=''
 
 # Display Github Information
 echo Github Repository: "${REPOSITORY}"
-echo Pull Request Name: "${PULL_REQUEST_TITLE}"
-echo Pull Request Number: "${PULL_REQUEST_NUMBER}"
+echo Issue Name: "${ISSUE_TITLE}"
+echo Issue Number: "${ISSUE_NUMBER}"
 
-# Check whether an OPEN milestone is linked to the pull request
-# If there is no milestone linked to the pull request then a value of "null" is returned from the API
-PULL_REQUEST_MILESTONE_DATA="${PULL_REQUEST_MILESTONE}"
-PULL_REQUEST_MILESTONE_STATE=$( echo "${PULL_REQUEST_MILESTONE}" | jq --raw-output .state )
-if [[ $PULL_REQUEST_MILESTONE != "null" && $PULL_REQUEST_MILESTONE_STATE == "open" ]];
+# Check whether an OPEN milestone is linked to the issue
+# If there is no milestone linked to the issue then a value of "null" is returned from the API
+ISSUE_MILESTONE_DATA="${ISSUE_MILESTONE}"
+ISSUE_MILESTONE_STATE=$( echo "${ISSUE_MILESTONE}" | jq --raw-output .state )
+if [[ $ISSUE_MILESTONE != "null" && $ISSUE_MILESTONE_STATE == "open" ]];
 then
     echo An open milestone was successfully found
-    MILESTONE_DATA=$PULL_REQUEST_MILESTONE_DATA
+    MILESTONE_DATA=$ISSUE_MILESTONE_DATA
 else
-    echo There is no open milestone linked to the pull request
+    echo There is no open milestone linked to the issue
 fi
 
 if [[ $MILESTONE_DATA != '' ]];
 then
-    # Retrieve only a specific set of data from the OPEN milestone linked to the pull request
+    # Retrieve only a specific set of data from the OPEN milestone linked to the issue
     OPEN_MILESTONE_DATA=$( echo "$MILESTONE_DATA" | jq --raw-output '{ title, number, open_issues, closed_issues, due_on }' )
     OPEN_ISSUES=$( echo "$OPEN_MILESTONE_DATA" | jq --raw-output .open_issues )
 

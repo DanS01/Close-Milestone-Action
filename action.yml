@@ -17,7 +17,7 @@ runs:
       REPOSITORY: ${{ github.repository }}
       PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
       PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
-      PULL_REQUEST_MILESTONE: ${{ toJSON(github.event.pull_request.milestone }}
+      PULL_REQUEST_MILESTONE: ${{ toJSON(github.event.pull_request.milestone) }}
       ISSUE_TITLE: ${{ github.event.issue.title }}
       ISSUE_NUMBER: ${{ github.event.issue.number }}
       ISSUE_MILESTONE: ${{ toJSON(github.event.issue.milestone) }}

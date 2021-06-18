@@ -11,7 +11,7 @@ elif [[ ${ISSUE_NUMBER} != "" ]];
 then
     EVENT_TRIGGER_SOURCE='Issue'
 else
-    EVENT_TRIGGER_SOURCE='Unkown'
+    EVENT_TRIGGER_SOURCE='Unknown'
 fi
 echo Event Trigger Source: "$EVENT_TRIGGER_SOURCE"
 

@@ -3,6 +3,8 @@
 # Initialize variables
 MILESTONE_DATA=''
 
+echo Event Name: "${EVENT_NAME}"
+
 # Determine what the source is of the triggered event
 if [[ ${PULL_REQUEST_NUMBER} != "" ]];
 then

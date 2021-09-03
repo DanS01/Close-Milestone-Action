@@ -1,17 +1,35 @@
 #!/bin/bash
 
+# --------------------------------------------------------------------------------
+
+# TODO: Better function name
+function test_func()
+{
+    echo Test Function
+    CURRENT_DATETIME=$( echo $(date +'%Y-%m-%dT%H:%M:%SZ') )
+    echo Current DateTime: $CURRENT_DATETIME
+
+    # TODO: Get all past due date milestones, get the count, loop for that amount of times and close off the milestones using their number
+    # MILESTONE_DATA=$( curl --silent -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${{ github.repository }}/milestones?state=open&sort=due_on&direction=asc )
+    # MILESTONE_DATA=$( echo $MILESTONE_DATA | jq --raw-output '.[]' )
+    # FUTURE_MILESTONES=$( echo $MILESTONE_DATA | jq --raw-output 'select(.due_on >= "${{ steps.workflow-vars.outputs.currentDateTime }}")' )
+}
+
+# --------------------------------------------------------------------------------
+
 # Initialize variables
 MILESTONE_DATA=''
 
-echo Event Name: "${EVENT_NAME}"
-
 # Determine what the source is of the triggered event
-if [[ ${PULL_REQUEST_NUMBER} != "" ]];
+if [[ ${EVENT_NAME} == "pull_request" ]];
 then
     EVENT_TRIGGER_SOURCE='Pull Request'
-elif [[ ${ISSUE_NUMBER} != "" ]];
+elif [[ ${EVENT_NAME} == "issues" ]];
 then
     EVENT_TRIGGER_SOURCE='Issue'
+elif [[ ${EVENT_NAME} == "workflow_dispatch" ]];
+then
+    EVENT_TRIGGER_SOURCE='Manual'
 else
     EVENT_TRIGGER_SOURCE='Unknown'
 fi
@@ -53,6 +71,12 @@ then
     else
         echo There is no open milestone linked to the issue
     fi
+elif [[ $EVENT_TRIGGER_SOURCE == "Manual" ]];
+then
+    echo Manual Run
+    echo Functionality currently under development...
+
+    test_func
 fi
 
 if [[ $MILESTONE_DATA != '' ]];

@@ -22,7 +22,7 @@ function close_standalone_open_milestones()
     echo Current DateTime: $CURRENT_DATETIME
 
     # Get the ID numbers of all OPEN milestones with a past due date
-    MILESTONE_DATA=$( curl --silent -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${{ github.repository }}/milestones?state=open&sort=due_on&direction=asc )
+    MILESTONE_DATA=$( curl --silent -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/"${REPOSITORY}"/milestones?state=open\&sort=due_on\&direction=asc )
     echo PAST_MILESTONES
     PAST_MILESTONES=$( echo $MILESTONE_DATA | jq --raw-output '.[] | select(.due_on <= '\"$CURRENT_DATETIME\"')' )
     echo $PAST_MILESTONES

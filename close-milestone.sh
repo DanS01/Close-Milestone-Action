@@ -19,24 +19,24 @@ function close_standalone_open_milestones()
     echo Closing standalone open milestones past their due date...
 
     CURRENT_DATETIME=$( echo $(date +'%Y-%m-%dT%H:%M:%SZ') )
-    echo Current DateTime: $CURRENT_DATETIME
 
-    # Get the ID numbers of all OPEN milestones with a past due date
+    # Get all OPEN milestones with a due date older than the current date and time
     MILESTONE_DATA=$( curl --silent -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/"${REPOSITORY}"/milestones?state=open\&sort=due_on\&direction=asc )
-    echo PAST_MILESTONES
     PAST_MILESTONES=$( echo $MILESTONE_DATA | jq --raw-output '.[] | select(.due_on <= '\"$CURRENT_DATETIME\"')' )
-    echo $PAST_MILESTONES
-    echo MILESTONE_NUMBERS
-    MILESTONE_NUMBERS=$( echo $PAST_MILESTONES | jq --raw-output '.number' )
-    echo $MILESTONE_NUMBERS
 
-    for NUMBER in ${MILESTONE_NUMBERS};
-    do
-        echo "$NUMBER"
-        close_milestone_curl_cmd $NUMBER
+    if [[ $PAST_MILESTONES != '' ]];
+    then
+        MILESTONE_NUMBERS=$( echo $PAST_MILESTONES | jq --raw-output '.number' )
 
-        echo Closed milestone number "$NUMBER"
-    done
+        for NUMBER in ${MILESTONE_NUMBERS};
+        do
+            close_milestone_curl_cmd $NUMBER
+
+            echo Closed milestone number "$NUMBER"
+        done
+    else
+        echo No standalone open milestones found
+    fi
 
     # Reset MILESTONE_DATA to avoid referencing issues with the variable after this function is called
     MILESTONE_DATA=''

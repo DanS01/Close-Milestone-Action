@@ -1,24 +1,48 @@
 #!/bin/bash
 
+# Initialize variables
+MILESTONE_DATA=''
+
 # --------------------------------------------------------------------------------
 
-# TODO: Better function name
-function test_func()
+function close_milestone_curl_cmd()
 {
-    echo Test Function
+    # First argument should be set as the milestone ID number
+    NUMBER=${1}
+
+    # Need to authenticate to obtain write access for the REST API PATCH event
+    CLOSED_MILESTONE=$( curl --silent -X PATCH -H "Authorization: token ${SECRETS_TOKEN}" "Accept: application/vnd.github.v3+json" https://api.github.com/repos/"${REPOSITORY}"/milestones/"${NUMBER}" -d '{ "state":"closed" }' )
+}
+
+function close_standalone_open_milestones()
+{
+    echo Closing standalone open milestones past their due date...
+
     CURRENT_DATETIME=$( echo $(date +'%Y-%m-%dT%H:%M:%SZ') )
     echo Current DateTime: $CURRENT_DATETIME
 
-    # TODO: Get all past due date milestones, get the count, loop for that amount of times and close off the milestones using their number
-    # MILESTONE_DATA=$( curl --silent -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${{ github.repository }}/milestones?state=open&sort=due_on&direction=asc )
-    # MILESTONE_DATA=$( echo $MILESTONE_DATA | jq --raw-output '.[]' )
-    # FUTURE_MILESTONES=$( echo $MILESTONE_DATA | jq --raw-output 'select(.due_on >= "${{ steps.workflow-vars.outputs.currentDateTime }}")' )
+    # Get the ID numbers of all OPEN milestones with a past due date
+    MILESTONE_DATA=$( curl --silent -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${{ github.repository }}/milestones?state=open&sort=due_on&direction=asc )
+    echo PAST_MILESTONES
+    PAST_MILESTONES=$( echo $MILESTONE_DATA | jq --raw-output '.[] | select(.due_on <= $CURRENT_DATETIME)' )
+    echo $PAST_MILESTONES
+    echo MILESTONE_NUMBERS
+    MILESTONE_NUMBERS=$( echo $PAST_MILESTONES | jq --raw-output '.number' )
+    echo $MILESTONE_NUMBERS
+
+    for NUMBER in ${MILESTONE_NUMBERS};
+    do
+        echo "$NUMBER"
+        close_milestone_curl_cmd $NUMBER
+
+        echo Closed milestone number "$NUMBER"
+    done
+
+    # Reset MILESTONE_DATA to avoid referencing issues with the variable after this function is called
+    MILESTONE_DATA=''
 }
 
 # --------------------------------------------------------------------------------
-
-# Initialize variables
-MILESTONE_DATA=''
 
 # Determine what the source is of the triggered event
 if [[ ${EVENT_NAME} == "pull_request" ]];
@@ -43,7 +67,7 @@ then
     echo Pull Request Number: "${PULL_REQUEST_NUMBER}"
 
     PULL_REQUEST_MILESTONE_DATA="${PULL_REQUEST_MILESTONE}"
-    PULL_REQUEST_MILESTONE_STATE=$( echo "${PULL_REQUEST_MILESTONE}" | jq --raw-output .state )
+    PULL_REQUEST_MILESTONE_STATE=$( echo "${PULL_REQUEST_MILESTONE}" | jq --raw-output '.state' )
 
     # Check whether an OPEN milestone is linked to the pull request
     # If there is no milestone linked to the pull request then a value of "null" is returned from the API
@@ -60,7 +84,7 @@ then
     echo Issue Number: "${ISSUE_NUMBER}"
 
     ISSUE_MILESTONE_DATA="${ISSUE_MILESTONE}"
-    ISSUE_MILESTONE_STATE=$( echo "${ISSUE_MILESTONE}" | jq --raw-output .state )
+    ISSUE_MILESTONE_STATE=$( echo "${ISSUE_MILESTONE}" | jq --raw-output '.state' )
 
     # Check whether an OPEN milestone is linked to the issue
     # If there is no milestone linked to the issue then a value of "null" is returned from the API
@@ -71,19 +95,13 @@ then
     else
         echo There is no open milestone linked to the issue
     fi
-elif [[ $EVENT_TRIGGER_SOURCE == "Manual" ]];
-then
-    echo Manual Run
-    echo Functionality currently under development...
-
-    test_func
 fi
 
 if [[ $MILESTONE_DATA != '' ]];
 then
     # Retrieve only a specific set of data from the OPEN milestone linked to the issue
     OPEN_MILESTONE_DATA=$( echo "$MILESTONE_DATA" | jq --raw-output '{ title, number, open_issues, closed_issues, due_on }' )
-    OPEN_ISSUES=$( echo "$OPEN_MILESTONE_DATA" | jq --raw-output .open_issues )
+    OPEN_ISSUES=$( echo "$OPEN_MILESTONE_DATA" | jq --raw-output '.open_issues' )
 
     # If there are no open issues then the milestone is elegible for closure
     if [[ $OPEN_ISSUES == 0 ]];
@@ -114,8 +132,7 @@ then
     DUE_ON=$( echo "$OPEN_MILESTONE" | jq --raw-output '.due_on' )
 
     # Close the OPEN milestone as there are no open issues remaining
-    # Need to authenticate to obtain write access for the REST API PATCH event
-    CLOSED_MILESTONE=$( curl --silent -X PATCH -H "Authorization: token ${SECRETS_TOKEN}" "Accept: application/vnd.github.v3+json" https://api.github.com/repos/"${REPOSITORY}"/milestones/"$NUMBER" -d '{ "state":"closed" }' )
+    close_milestone_curl_cmd $NUMBER
 
     # Display the details of the CLOSED milestone
     echo Milestone with the following details has been successfully closed:
@@ -123,4 +140,9 @@ then
     echo Number: "$NUMBER"
     echo Closed Issues: "$CLOSED_ISSUES"
     echo Due On: "$DUE_ON"
+fi
+
+if [[ $EVENT_TRIGGER_SOURCE == "Pull Request" || $EVENT_TRIGGER_SOURCE == "Issue" || $EVENT_TRIGGER_SOURCE == "Manual" ]];
+then
+    close_standalone_open_milestones
 fi
